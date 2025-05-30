@@ -1,3 +1,7 @@
+#include <TimerOne.h>
+
+
+
 /////Ultrasonico
 #define TRIG_CEN A0
 #define ECHO_CEN A1
@@ -22,6 +26,14 @@
 /////Boton
 #define BOTON1 2
 #define BOTON2 3
+
+int estadoBoton1 = ESPERA;
+int msBoton1 = 0;
+
+int estadoBoton2 = ESPERA;
+int msBoton2 = 0;
+
+
 ////
 
 ////Motores
@@ -33,6 +45,28 @@
 #define ENABLE_IZQ 5
 #define ENABLE_DER 6
 ///
+
+///AntiRebote
+#define PULSADO LOW
+#define N_PULSADO HIGH
+
+#define T_REBOTE 10
+
+#define ESPERA 10
+#define CONFIRMACION 11
+#define LIBERACION 12
+
+int mSeg = 0;
+
+
+
+///
+
+
+
+void codigo (byte sensores);
+
+
 
 ////
 
@@ -67,6 +101,9 @@ void setup() {
   pinMode(ENABLE_DER, OUTPUT);
   pinMode(ENABLE_IZQ, OUTPUT);
   ///
+  Timer1.attachInterrupt(ISR_Timer);
+  Timer1.initialize(1000);  // 1 ms
+  ///
 
   Serial.begin(9600);
 }
@@ -74,14 +111,28 @@ void setup() {
 void loop() {
   byte lectura_sensores = 0;
 
-  bool pisoIzq  = leerSensorPiso(PISO_IZQ); // 1 si hay blanco
-  bool pisoDer  = leerSensorPiso(PISO_DER);
+  bool pisoIzq  = borde(PISO_IZQ); // 1 si hay blanco
+  bool pisoDer  = borde(PISO_DER);
   bool ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ) < 30);
   bool ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN) < 30);
   bool ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER) < 30);
 
   lectura_sensores = (ultraIzq << 5) | (ultraCen << 4) |
                      (ultraDer << 3) | (pisoIzq << 2) | (pisoDer << 1);
+
+  codigo(lectura_sensores);
+
+/*
+  if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
+  Serial.println("Botón 1 presionado");
+  // Ejecutar algo
+}
+
+if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
+  Serial.println("Botón 2 presionado");
+  // Ejecutar algo
+}
+*/
 
 }
 
@@ -110,54 +161,54 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 /////
 
 ////sensor piso
-bool leerSensorPiso(int pin) {
+bool borde(int pin) {
   int lectura = analogRead(pin);
   return (lectura > 600); // devuelve true si detecta blanco (borde)
 }
 ////
 
 ////Motores
-void avanzar(int velocidad) {
+void avanzar(int velocidadIzq, int velocidadDer) {
   digitalWrite(MOTOR_IZQ_A, HIGH);
   digitalWrite(MOTOR_IZQ_B, LOW);
-  analogWrite(ENEABLE_IZQ, velocidad);
+  analogWrite(ENABLE_IZQ, velocidadIzq);
 
   digitalWrite(MOTOR_DER_A, HIGH);
   digitalWrite(MOTOR_DER_B, LOW);
-  analogWrite(ENEABLE_DER, velocidad);
+  analogWrite(ENABLE_DER, velocidadDer);
 
 }
 
-void retroceder(int velocidad) {
+void retroceder(int velocidadIzq, int velocidadDer) {
   digitalWrite(MOTOR_IZQ_A, LOW);
   digitalWrite(MOTOR_IZQ_B, HIGH);
-  analogWrite(ENEABLE_IZQ, velocidad);
+  analogWrite(ENABLE_IZQ, velocidadIzq);
 
   digitalWrite(MOTOR_DER_A, LOW);
   digitalWrite(MOTOR_DER_B, HIGH);
-  analogWrite(ENEABLE_DER, velocidad);
+  analogWrite(ENABLE_DER, velocidadDer);
 
 }
 
-void girarIzq(int velocidad) {
+void girarIzq(int velocidadIzq, int velocidadDer) {
   digitalWrite(MOTOR_IZQ_A, LOW);
   digitalWrite(MOTOR_IZQ_B, HIGH);
-  analogWrite(ENEABLE_IZQ, velocidad);
+  analogWrite(ENABLE_IZQ, velocidadIzq);
 
   digitalWrite(MOTOR_DER_A, HIGH);
   digitalWrite(MOTOR_DER_B, LOW);
-  analogWrite(ENEABLE_DER, velocidad);
+  analogWrite(ENABLE_DER, velocidadDer);
 
 }
 
-void girarDer(int velocidad) {
+void girarDer(int velocidadIzq, int velocidadDer) {
   digitalWrite(MOTOR_IZQ_A, HIGH);
   digitalWrite(MOTOR_IZQ_B, LOW);
-  analogWrite(ENEABLE_IZQ, velocidad);
+  analogWrite(ENABLE_IZQ, velocidadIzq);
 
   digitalWrite(MOTOR_DER_A, LOW);
   digitalWrite(MOTOR_DER_B, HIGH);
-  analogWrite(ENEABLE_DER, velocidad);
+  analogWrite(ENABLE_DER, velocidadDer);
 
 }
 
@@ -169,3 +220,56 @@ void detener() {
 
 }
 ////
+
+
+///antirebote
+bool antiRebote(int pin, int &estadoMaquina, int &msBoton) {
+  bool lectura = digitalRead(pin);
+
+  switch (estadoMaquina) {
+    case ESPERA:
+      if (lectura == PULSADO) {
+        msBoton = 0;
+        estadoMaquina = CONFIRMACION;
+      }
+      break;
+
+    case CONFIRMACION:
+      if (msBoton >= T_REBOTE) {
+        if (lectura == PULSADO) {
+          estadoMaquina = LIBERACION;
+        } else {
+          estadoMaquina = ESPERA;
+        }
+      }
+      break;
+
+    case LIBERACION:
+      if (lectura == N_PULSADO) {
+        estadoMaquina = ESPERA;
+        return true;  // flanco detectado
+      }
+      break;
+  }
+
+  return false;  // no flanco
+}
+//
+
+///timer
+void ISR_Timer() {
+  msBoton1++;
+  msBoton2++;
+}
+////
+
+
+////
+void codigo (byte sensores) {
+  switch (sensores) {
+
+    case 0b00000:
+
+      break;
+  }
+}
