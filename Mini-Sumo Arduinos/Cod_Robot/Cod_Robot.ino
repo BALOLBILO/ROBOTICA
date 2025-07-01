@@ -23,18 +23,7 @@
 #define LED4 9
 ////
 
-/////Boton
-#define BOTON1 2
-#define BOTON2 3
 
-int estadoBoton1 = ESPERA;
-int msBoton1 = 0;
-
-int estadoBoton2 = ESPERA;
-int msBoton2 = 0;
-
-
-////
 
 ////Motores
 #define MOTOR_IZQ_A 4
@@ -61,6 +50,23 @@ int mSeg = 0;
 
 
 ///
+
+/////Boton
+#define BOTON1 2
+#define BOTON2 3
+
+int estadoBoton1 = ESPERA;
+int msBoton1 = 0;
+
+int estadoBoton2 = ESPERA;
+int msBoton2 = 0;
+
+
+int  msBotonEspera = 0;
+bool esperandoEjecucion = false;
+int tiempoDesdePresionado = 0;
+
+////
 
 
 
@@ -109,6 +115,7 @@ void setup() {
 }
 
 void loop() {
+
   byte lectura_sensores = 0;
 
   bool pisoIzq  = borde(PISO_IZQ); // 1 si hay blanco
@@ -117,22 +124,34 @@ void loop() {
   bool ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN) < 30);
   bool ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER) < 30);
 
-  lectura_sensores = (ultraIzq << 5) | (ultraCen << 4) |
-                     (ultraDer << 3) | (pisoIzq << 2) | (pisoDer << 1);
+  lectura_sensores = (ultraIzq << 4) | (ultraCen << 3) |
+                     (ultraDer << 2) | (pisoIzq << 1) | (pisoDer);
 
   codigo(lectura_sensores);
 
-/*
-  if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
-  Serial.println("Botón 1 presionado");
-  // Ejecutar algo
-}
 
-if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
-  Serial.println("Botón 2 presionado");
-  // Ejecutar algo
-}
-*/
+  if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
+    Serial.println("Botón presionado. Esperando 5s...");
+    esperandoEjecucion = true;
+    digitalWrite(LED1, HIGH);
+    tiempoDesdePresionado = 0;
+  }
+
+  /// — PASARON 5 SEGUNDOS —
+  if (esperandoEjecucion && tiempoDesdePresionado >= 5000) {
+    Serial.println("¡Ejecutando código tras 5s!");
+    codigo(lectura_sensores);
+
+    digitalWrite(LED1, LOW);
+    esperandoEjecucion = false;
+
+  }
+  /*
+    if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
+    Serial.println("Botón 2 presionado");
+    // Ejecutar algo
+    }
+  */
 
 }
 
@@ -260,6 +279,12 @@ bool antiRebote(int pin, int &estadoMaquina, int &msBoton) {
 void ISR_Timer() {
   msBoton1++;
   msBoton2++;
+  msBotonEspera++;
+
+  if (esperandoEjecucion) {
+    tiempoDesdePresionado++;
+  }
+
 }
 ////
 
@@ -268,8 +293,135 @@ void ISR_Timer() {
 void codigo (byte sensores) {
   switch (sensores) {
 
-    case 0b00000:
-
+    case 0b00000: // 0
+      // Acción para 00000
       break;
+
+    case 0b00001: // 1
+      // Acción para 00001
+      break;
+
+    case 0b00010: // 2
+      // Acción para 00010
+      break;
+
+    case 0b00011: // 3
+      // Acción para 00011
+      break;
+
+    case 0b00100: // 4
+      // Acción para 00100
+      break;
+
+    case 0b00101: // 5
+      // Acción para 00101
+      break;
+
+    case 0b00110: // 6
+      // Acción para 00110
+      break;
+
+    case 0b00111: // 7
+      // Acción para 00111
+      break;
+
+    case 0b01000: // 8
+      // Acción para 01000
+      break;
+
+    case 0b01001: // 9
+      // Acción para 01001
+      break;
+
+    case 0b01010: // 10
+      // Acción para 01010
+      break;
+
+    case 0b01011: // 11
+      // Acción para 01011
+      break;
+
+    case 0b01100: // 12
+      // Acción para 01100
+      break;
+
+    case 0b01101: // 13
+      // Acción para 01101
+      break;
+
+    case 0b01110: // 14
+      // Acción para 01110
+      break;
+
+    case 0b01111: // 15
+      // Acción para 01111
+      break;
+
+    case 0b10000: // 16
+      // Acción para 10000
+      break;
+
+    case 0b10001: // 17
+      // Acción para 10001
+      break;
+
+    case 0b10010: // 18
+      // Acción para 10010
+      break;
+
+    case 0b10011: // 19
+      // Acción para 10011
+      break;
+
+    case 0b10100: // 20
+      // Acción para 10100
+      break;
+
+    case 0b10101: // 21
+      // Acción para 10101
+      break;
+
+    case 0b10110: // 22
+      // Acción para 10110
+      break;
+
+    case 0b10111: // 23
+      // Acción para 10111
+      break;
+
+    case 0b11000: // 24
+      // Acción para 11000
+      break;
+
+    case 0b11001: // 25
+      // Acción para 11001
+      break;
+
+    case 0b11010: // 26
+      // Acción para 11010
+      break;
+
+    case 0b11011: // 27
+      // Acción para 11011
+      break;
+
+    case 0b11100: // 28
+      // Acción para 11100
+      break;
+
+    case 0b11101: // 29
+      // Acción para 11101
+      break;
+
+    case 0b11110: // 30
+      // Acción para 11110
+      break;
+
+    case 0b11111: // 31
+      // Acción para 11111
+      break;
+
+
+
   }
 }
