@@ -89,8 +89,7 @@ void setup() {
   pinMode(TRIG_DER, OUTPUT);
   pinMode(ECHO_DER, INPUT);
   ///
-  pinMode(PISO_IZQ, INPUT);
-  pinMode(PISO_DER, INPUT);
+  
   ///
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
@@ -127,30 +126,38 @@ void loop() {
   lectura_sensores = (ultraIzq << 4) | (ultraCen << 3) |
                      (ultraDer << 2) | (pisoIzq << 1) | (pisoDer);
 
-  codigo(lectura_sensores);
 
-
-  if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
-    Serial.println("Botón presionado. Esperando 5s...");
-    esperandoEjecucion = true;
-    digitalWrite(LED1, HIGH);
-    tiempoDesdePresionado = 0;
+  if (pisoIzq) {
+    Serial.println("1");
   }
-
-  /// — PASARON 5 SEGUNDOS —
-  if (esperandoEjecucion && tiempoDesdePresionado >= 5000) {
-    Serial.println("¡Ejecutando código tras 5s!");
-    codigo(lectura_sensores);
-
-    digitalWrite(LED1, LOW);
-    esperandoEjecucion = false;
-
+  else {
+    Serial.println("0");
   }
   /*
-    if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
-    Serial.println("Botón 2 presionado");
-    // Ejecutar algo
+    codigo(lectura_sensores);
+
+
+    if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
+     Serial.println("Botón presionado. Esperando 5s...");
+     esperandoEjecucion = true;
+     digitalWrite(LED1, HIGH);
+     tiempoDesdePresionado = 0;
     }
+
+    /// — PASARON 5 SEGUNDOS —
+    if (esperandoEjecucion && tiempoDesdePresionado >= 5000) {
+     Serial.println("¡Ejecutando código tras 5s!");
+     codigo(lectura_sensores);
+
+     digitalWrite(LED1, LOW);
+     esperandoEjecucion = false;
+
+    }
+    /*
+     if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
+     Serial.println("Botón 2 presionado");
+     // Ejecutar algo
+     }
   */
 
 }
@@ -183,6 +190,13 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 bool borde(int pin) {
   int lectura = analogRead(pin);
   return (lectura > 600); // devuelve true si detecta blanco (borde)
+}
+
+void sensorPiso (int pin){
+
+Serial.println(analogRead(pin));
+
+  
 }
 ////
 
