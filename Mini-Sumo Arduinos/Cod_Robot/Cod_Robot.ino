@@ -71,6 +71,16 @@ int tiempoDesdePresionado = 0;
 
 
 void codigo (byte sensores);
+long leerUltrasonico(int triggerPin, int echoPin);
+bool borde(int pin) ;
+void sensorPiso(int pin);
+void avanzar(int velocidadIzq, int velocidadDer);
+void retroceder(int velocidadIzq, int velocidadDer);
+void girarIzq(int velocidadIzq, int velocidadDer);
+void girarDer(int velocidadIzq, int velocidadDer);
+void detener();
+bool antiRebote(int pin, int &estadoMaquina, int &msBoton);
+void ISR_Timer();
 
 
 
@@ -111,48 +121,28 @@ void setup() {
   ///
 
   Serial.begin(9600);
+  delay(5000);
 }
 
 void loop() {
 
   byte lectura_sensores = 0;
-
+  int LecturaIzq = leerUltrasonico(TRIG_IZQ, ECHO_IZQ);
+  int LecturaDer = leerUltrasonico(TRIG_DER, ECHO_DER);
+  int LecturaCen = leerUltrasonico(TRIG_CEN, ECHO_CEN);
   bool pisoIzq  = borde(PISO_IZQ); // 1 si hay blanco
   bool pisoDer  = borde(PISO_DER);
-  bool ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ) < 30);
+  bool ultraIzq   = (LecturaIzq < 30&&LecturaIzq!= 999);
   bool ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN) < 30);
   bool ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER) < 30);
 
   lectura_sensores = (ultraIzq << 4) | (ultraCen << 3) |
                      (ultraDer << 2) | (pisoIzq << 1) | (pisoDer);
 
-
-  if (pisoIzq) {
-    Serial.println("1");
-  }
-  else {
-    Serial.println("0");
-  }
-  /*
     codigo(lectura_sensores);
+    Serial.println(lectura_sensores);
 
-
-    if (antiRebote(BOTON1, estadoBoton1, msBoton1)) {
-     Serial.println("Botón presionado. Esperando 5s...");
-     esperandoEjecucion = true;
-     digitalWrite(LED1, HIGH);
-     tiempoDesdePresionado = 0;
-    }
-
-    /// — PASARON 5 SEGUNDOS —
-    if (esperandoEjecucion && tiempoDesdePresionado >= 5000) {
-     Serial.println("¡Ejecutando código tras 5s!");
-     codigo(lectura_sensores);
-
-     digitalWrite(LED1, LOW);
-     esperandoEjecucion = false;
-
-    }
+ 
     /*
      if (antiRebote(BOTON2, estadoBoton2, msBoton2)) {
      Serial.println("Botón 2 presionado");
@@ -190,13 +180,6 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 bool borde(int pin) {
   int lectura = analogRead(pin);
   return (lectura > 600); // devuelve true si detecta blanco (borde)
-}
-
-void sensorPiso (int pin){
-
-Serial.println(analogRead(pin));
-
-  
 }
 ////
 
@@ -307,132 +290,165 @@ void ISR_Timer() {
 void codigo (byte sensores) {
   switch (sensores) {
 
-    case 0b00000: // 0
+    case 0b00000: // BUSCAR
       // Acción para 00000
+      avanzar(255,255);
+      
       break;
 
-    case 0b00001: // 1
+    case 0b00001: // PISO DERECHA
       // Acción para 00001
+      girarIzq(255,255);
       break;
 
-    case 0b00010: // 2
+    case 0b00010: // PISO IZQUIERDA
       // Acción para 00010
+      girarDer(255,255);
       break;
 
-    case 0b00011: // 3
+    case 0b00011: // DOBLE PISO
       // Acción para 00011
+      retroceder(255,255);
       break;
 
-    case 0b00100: // 4
+    case 0b00100: // VISION DERECHA
       // Acción para 00100
+      girarDer(255,255);
       break;
 
-    case 0b00101: // 5
+    case 0b00101: // VISION DERECHA Y SENSOR DERECHA
       // Acción para 00101
+      girarIzq(255,255);
       break;
 
-    case 0b00110: // 6
+    case 0b00110: // VISION DERECHA Y SENSOR IZQUIERDA
       // Acción para 00110
+      girarDer(255,255);
       break;
 
-    case 0b00111: // 7
+    case 0b00111: // VISION DERECHA Y AMBOS SENSORES
       // Acción para 00111
+      retroceder(255,255);
       break;
 
-    case 0b01000: // 8
+    case 0b01000: // SENSOR CENTRO
       // Acción para 01000
+      avanzar(255,255);
       break;
 
-    case 0b01001: // 9
+    case 0b01001: // SENSOR CENTRO Y PISO DERECHA
       // Acción para 01001
+      girarIzq(255,255);
       break;
 
-    case 0b01010: // 10
+    case 0b01010: // SENSOR CENTRO Y PISO IZQUIERDA
       // Acción para 01010
+      girarDer(255,255);
       break;
 
-    case 0b01011: // 11
+    case 0b01011: // SENSOR CENTRO Y AMBOS PISOS
       // Acción para 01011
+      retroceder(255,255);
       break;
 
-    case 0b01100: // 12
+    case 0b01100: // SENSOR CENTRO Y SENSOR DERECHA
       // Acción para 01100
+      avanzar(255,255);
       break;
 
-    case 0b01101: // 13
+    case 0b01101: // SENSOR CENTROR Y SENSOR DERECHA PIZO DER
       // Acción para 01101
+      girarIzq(255,255);
       break;
 
-    case 0b01110: // 14
+    case 0b01110: // SENSOR CENTRAL SENSOR DERECHA Y PISO IZQ
       // Acción para 01110
+      girarDer(255,255);
       break;
 
-    case 0b01111: // 15
+    case 0b01111: // SENSOR CENTRAL SENSOR DERECHA AMBOS PISOS
       // Acción para 01111
+      retroceder(255,255);
       break;
 
-    case 0b10000: // 16
+    case 0b10000: // SENSOR IZQUIERDA
       // Acción para 10000
+      girarIzq(255,255);
       break;
 
-    case 0b10001: // 17
+    case 0b10001: // SENSOR IZQUIERDA PISO DERECHA
       // Acción para 10001
+      girarIzq(255,255);
       break;
 
-    case 0b10010: // 18
+    case 0b10010: // SENSOR IZQUIERDA PISO IZQUIERDA
       // Acción para 10010
+      girarDer(255,255);
       break;
 
-    case 0b10011: // 19
+    case 0b10011: // SENSOR IZQUIERDA AMBOS PISOS
       // Acción para 10011
+      retroceder(255,255);
       break;
 
-    case 0b10100: // 20
+    case 0b10100: // SENSOR IZQUIERDA SENSOR DERECHA
       // Acción para 10100
+      girarIzq(255,255);
       break;
 
-    case 0b10101: // 21
+    case 0b10101: // SENSOR IZQUIERDA SENSOR DERECHA PISO DER
       // Acción para 10101
+      girarIzq(255,255);
       break;
 
     case 0b10110: // 22
       // Acción para 10110
+      girarDer(255,255);
       break;
 
     case 0b10111: // 23
       // Acción para 10111
+      retroceder(255,255);
       break;
 
     case 0b11000: // 24
       // Acción para 11000
+      avanzar(255,255);
       break;
 
     case 0b11001: // 25
       // Acción para 11001
+      girarIzq(255,255);
       break;
 
     case 0b11010: // 26
       // Acción para 11010
+      girarDer(255,255);
       break;
 
     case 0b11011: // 27
       // Acción para 11011
+      retroceder(255,255);
       break;
 
     case 0b11100: // 28
       // Acción para 11100
+      avanzar(255,255);
       break;
 
     case 0b11101: // 29
       // Acción para 11101
+      girarIzq(255,255);
       break;
 
     case 0b11110: // 30
       // Acción para 11110
+      girarDer(255,255);
       break;
 
     case 0b11111: // 31
       // Acción para 11111
+      retroceder(255,255);
       break;
 
 
