@@ -20,7 +20,7 @@
 #define LED1 12
 #define LED2 11
 #define LED3 10
-#define LED4 9
+#define LED4 13
 ////
 
 
@@ -72,7 +72,7 @@ int tiempoDesdePresionado = 0;
 
 void codigo (byte sensores);
 long leerUltrasonico(int triggerPin, int echoPin);
-bool borde(int pin) ;
+int borde(int pin) ;
 void sensorPiso(int pin);
 void avanzar(int velocidadIzq, int velocidadDer);
 void retroceder(int velocidadIzq, int velocidadDer);
@@ -134,24 +134,29 @@ int PisoDer = 0;
 int PisoIzq = 0;
 
 void loop() {
-if (millis() - millisVD >= 60){
-  VisorDer = leerUltrasonico(TRIG_DER,ECHO_DER);
-  millisVD = millis();
-}
-if (millis() - millisVC >= 60){
-  VisorCen = leerUltrasonico(TRIG_CEN,ECHO_CEN);
-  millisVC = millis();
-}
-if (millis() - millisVI >= 60){
-  VisorIzq = leerUltrasonico(TRIG_IZQ,ECHO_IZQ);
-  millisVI = millis();
-}
-Serial.print("Visiones, Der:  ");
-Serial.print(VisorDer);
-Serial.print(" Cen: ");
-Serial.println(VisorCen);
-Serial.print(" Izq: ");
-Serial.println(VisorIzq);
+  byte lectura_sensores = 0;
+  int pisoIzq  = (borde(PISO_IZQ)<960); // 1 si hay blanco
+  int pisoDer  = (borde(PISO_DER)<960);
+  int ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ)<30);
+  int ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN)<30);
+  int ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER)<30);
+
+  lectura_sensores = (ultraIzq << 5) | (ultraCen << 4) |
+                     (ultraDer << 3) | (pisoIzq << 2) | (pisoDer << 1);
+//codigo(lectura_sensores);
+Serial.print("Sensores: Izq: ");
+Serial.print(ultraIzq);
+Serial.print("  Cen ");
+Serial.print(ultraCen);
+Serial.print("  Der  ");
+Serial.print(ultraDer);
+Serial.print("  Pisos: Izq: ");
+Serial.print(pisoIzq);
+Serial.print("  Der: ");
+Serial.print(pisoDer);
+Serial.println(" Byte: ");
+
+
 }
 
 
@@ -179,9 +184,9 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 /////
 
 ////sensor piso
-bool borde(int pin) {
+int borde(int pin) {
   int lectura = analogRead(pin);
-  return (lectura > 600); // devuelve true si detecta blanco (borde)
+  return lectura ; // devuelve true si detecta blanco (borde)
 }
 ////
 
@@ -293,167 +298,163 @@ void codigo (byte sensores) {
   switch (sensores) {
 
     case 0b00000: // BUSCAR
-      // Acción para 00000
       avanzar(255,255);
-      
+      Serial.println("Avanzar 1");
       break;
 
     case 0b00001: // PISO DERECHA
-      // Acción para 00001
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 1");
       break;
 
     case 0b00010: // PISO IZQUIERDA
-      // Acción para 00010
       girarDer(255,255);
+      Serial.println("Girar Derecha 1");
       break;
 
     case 0b00011: // DOBLE PISO
-      // Acción para 00011
       retroceder(255,255);
+      Serial.println("Retroceder 1");
       break;
 
     case 0b00100: // VISION DERECHA
-      // Acción para 00100
       girarDer(255,255);
+      Serial.println("Girar Derecha 2");
       break;
 
     case 0b00101: // VISION DERECHA Y SENSOR DERECHA
-      // Acción para 00101
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 2");
       break;
 
     case 0b00110: // VISION DERECHA Y SENSOR IZQUIERDA
-      // Acción para 00110
       girarDer(255,255);
+      Serial.println("Girar Derecha 3");
       break;
 
     case 0b00111: // VISION DERECHA Y AMBOS SENSORES
-      // Acción para 00111
       retroceder(255,255);
+      Serial.println("Retroceder 2");
       break;
 
     case 0b01000: // SENSOR CENTRO
-      // Acción para 01000
       avanzar(255,255);
+      Serial.println("Avanzar 2");
       break;
 
     case 0b01001: // SENSOR CENTRO Y PISO DERECHA
-      // Acción para 01001
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 3");
       break;
 
     case 0b01010: // SENSOR CENTRO Y PISO IZQUIERDA
-      // Acción para 01010
       girarDer(255,255);
+      Serial.println("Girar Derecha 4");
       break;
 
     case 0b01011: // SENSOR CENTRO Y AMBOS PISOS
-      // Acción para 01011
       retroceder(255,255);
+      Serial.println("Retroceder 3");
       break;
 
     case 0b01100: // SENSOR CENTRO Y SENSOR DERECHA
-      // Acción para 01100
       avanzar(255,255);
+      Serial.println("Avanzar 3");
       break;
 
-    case 0b01101: // SENSOR CENTROR Y SENSOR DERECHA PIZO DER
-      // Acción para 01101
+    case 0b01101: // SENSOR CENTRO Y SENSOR DERECHA PISO DER
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 4");
       break;
 
     case 0b01110: // SENSOR CENTRAL SENSOR DERECHA Y PISO IZQ
-      // Acción para 01110
       girarDer(255,255);
+      Serial.println("Girar Derecha 5");
       break;
 
     case 0b01111: // SENSOR CENTRAL SENSOR DERECHA AMBOS PISOS
-      // Acción para 01111
       retroceder(255,255);
+      Serial.println("Retroceder 4");
       break;
 
     case 0b10000: // SENSOR IZQUIERDA
-      // Acción para 10000
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 5");
       break;
 
     case 0b10001: // SENSOR IZQUIERDA PISO DERECHA
-      // Acción para 10001
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 6");
       break;
 
     case 0b10010: // SENSOR IZQUIERDA PISO IZQUIERDA
-      // Acción para 10010
       girarDer(255,255);
+      Serial.println("Girar Derecha 6");
       break;
 
     case 0b10011: // SENSOR IZQUIERDA AMBOS PISOS
-      // Acción para 10011
       retroceder(255,255);
+      Serial.println("Retroceder 5");
       break;
 
     case 0b10100: // SENSOR IZQUIERDA SENSOR DERECHA
-      // Acción para 10100
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 7");
       break;
 
     case 0b10101: // SENSOR IZQUIERDA SENSOR DERECHA PISO DER
-      // Acción para 10101
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 8");
       break;
 
     case 0b10110: // 22
-      // Acción para 10110
       girarDer(255,255);
+      Serial.println("Girar Derecha 7");
       break;
 
     case 0b10111: // 23
-      // Acción para 10111
       retroceder(255,255);
+      Serial.println("Retroceder 6");
       break;
 
     case 0b11000: // 24
-      // Acción para 11000
       avanzar(255,255);
+      Serial.println("Avanzar 4");
       break;
 
     case 0b11001: // 25
-      // Acción para 11001
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 9");
       break;
 
     case 0b11010: // 26
-      // Acción para 11010
       girarDer(255,255);
+      Serial.println("Girar Derecha 8");
       break;
 
     case 0b11011: // 27
-      // Acción para 11011
       retroceder(255,255);
+      Serial.println("Retroceder 7");
       break;
 
     case 0b11100: // 28
-      // Acción para 11100
       avanzar(255,255);
+      Serial.println("Avanzar 5");
       break;
 
     case 0b11101: // 29
-      // Acción para 11101
       girarIzq(255,255);
+      Serial.println("Girar Izquierda 10");
       break;
 
     case 0b11110: // 30
-      // Acción para 11110
       girarDer(255,255);
+      Serial.println("Girar Derecha 9");
       break;
 
     case 0b11111: // 31
-      // Acción para 11111
       retroceder(255,255);
+      Serial.println("Retroceder 8");
       break;
-
-
-
   }
 }

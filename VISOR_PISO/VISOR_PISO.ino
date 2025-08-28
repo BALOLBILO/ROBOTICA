@@ -20,7 +20,7 @@
 #define LED1 12
 #define LED2 11
 #define LED3 10
-#define LED4 9
+#define LED4 13
 ////
 
 
@@ -72,7 +72,7 @@ int tiempoDesdePresionado = 0;
 
 void codigo (byte sensores);
 long leerUltrasonico(int triggerPin, int echoPin);
-bool borde(int pin) ;
+int borde(int pin) ;
 void sensorPiso(int pin);
 void avanzar(int velocidadIzq, int velocidadDer);
 void retroceder(int velocidadIzq, int velocidadDer);
@@ -134,6 +134,8 @@ int PisoDer = 0;
 int PisoIzq = 0;
 
 void loop() {
+PisoDer = borde(PISO_DER);
+PisoIzq = borde(PISO_IZQ);
 if (millis() - millisVD >= 60){
   VisorDer = leerUltrasonico(TRIG_DER,ECHO_DER);
   millisVD = millis();
@@ -146,12 +148,26 @@ if (millis() - millisVI >= 60){
   VisorIzq = leerUltrasonico(TRIG_IZQ,ECHO_IZQ);
   millisVI = millis();
 }
-Serial.print("Visiones, Der:  ");
+
+if(VisorIzq < 30 ){
+  avanzar(255,255);
+  digitalWrite(LED4,HIGH);
+}
+if(VisorIzq > 30 ){
+  retroceder(255,255);
+  digitalWrite(LED4,LOW);
+}
+Serial.print("Sensores: Izq: ");
+Serial.print(VisorIzq);
+Serial.print("  Cen ");
+Serial.print(VisorCen);
+Serial.print("  Der  ");
 Serial.print(VisorDer);
-Serial.print(" Cen: ");
-Serial.println(VisorCen);
-Serial.print(" Izq: ");
-Serial.println(VisorIzq);
+Serial.print("  Pisos: Izq: ");
+Serial.print(PisoIzq);
+Serial.print("  Der: ");
+Serial.println(PisoDer);
+
 }
 
 
@@ -179,9 +195,9 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 /////
 
 ////sensor piso
-bool borde(int pin) {
+int borde(int pin) {
   int lectura = analogRead(pin);
-  return (lectura > 600); // devuelve true si detecta blanco (borde)
+  return lectura ; // devuelve true si detecta blanco (borde)
 }
 ////
 
