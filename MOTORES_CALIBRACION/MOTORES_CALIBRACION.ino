@@ -134,8 +134,13 @@ int PisoDer = 0;
 int PisoIzq = 0;
 
 void loop() {
-  digitalWrite(13, HIGH);
+  digitalWrite(9,HIGH);
+  digitalWrite(8,LOW);
+  analogWrite(5,255);
 
+  digitalWrite(7, HIGH);
+  digitalWrite(4, LOW);
+  analogWrite(6,255);
 }
 
 ////Sensor ultrasonico
