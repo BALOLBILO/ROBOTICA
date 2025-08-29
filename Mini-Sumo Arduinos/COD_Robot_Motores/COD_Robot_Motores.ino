@@ -63,17 +63,9 @@ void setup() {
 
   Serial.begin(9600);
 }
+
 void loop() {
-avanzar(255,255);
-delay(2000);
-detener();
-delay(2000);
-retroceder(255,255);
-delay(2000);
-girarIzq(255,255);
-delay(2000);
-girarDer(255,255);
-delay(2000);
+
 }
 
 void avanzar(int velocidadIzq, int velocidadDer) {

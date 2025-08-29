@@ -1,26 +1,29 @@
-#include <TimerOne.h>
+//#include <TimerOne.h>
 
 
 
 /////Ultrasonico
-#define TRIG_IZQ A3
-#define ECHO_IZQ A2
-#define TRIG_CEN A4
-#define ECHO_CEN A5
-#define TRIG_DER A1
-#define ECHO_DER A0
+#define ECHO_IZQ A0
+#define TRIG_IZQ A1
+#define ECHO_CEN A2
+#define TRIG_CEN A3
+#define TRIG_DER A4
+#define ECHO_DER A5
+
+//PROMEDIAR?? podria ser util pero hay que pensar bien fuerte la logica del promdio, capaz mañana al a mañana semeocurre
 ////
 
 /////Sensor piso
 #define PISO_IZQ A6
 #define PISO_DER A7
+#define UMBRAL 950
 ////
 
 //////Leds
 #define LED1 12
 #define LED2 11
 #define LED3 10
-#define LED4 13
+#define LED4 9
 ////
 
 
@@ -72,21 +75,15 @@ int tiempoDesdePresionado = 0;
 
 void codigo (byte sensores);
 long leerUltrasonico(int triggerPin, int echoPin);
-int borde(int pin) ;
-void sensorPiso(int pin);
-void avanzar(int velocidadIzq, int velocidadDer);
-void retroceder(int velocidadIzq, int velocidadDer);
-void girarIzq(int velocidadIzq, int velocidadDer);
-void girarDer(int velocidadIzq, int velocidadDer);
-void detener();
-bool antiRebote(int pin, int &estadoMaquina, int &msBoton);
-void ISR_Timer();
-
-
+int sensorPiso (int pin);
+//void ISR_Timer();
 
 ////
-
-
+//Añadido el intervalo porque el sensor sino no se recarga:
+long intervalo = 60;
+long millisUltrasonidoIzq= 0;
+long millisUltrasonidoCen= 0;
+long millisUltrasonidoDer= 0;
 
 
 void setup() {
@@ -116,47 +113,24 @@ void setup() {
   pinMode(ENABLE_DER, OUTPUT);
   pinMode(ENABLE_IZQ, OUTPUT);
   ///
-  Timer1.attachInterrupt(ISR_Timer);
-  Timer1.initialize(1000);  // 1 ms
+  //Timer1.attachInterrupt(ISR_Timer);
+  //Timer1.initialize(1000);  // 1 ms
   ///
 
   Serial.begin(9600);
-  Serial.println("48 Horas para Trelew");
 }
 
-long millisVD = 0;
-long millisVC = 0;
-long millisVI = 0;
-int VisorDer = 0;
-int VisorCen = 0;
-int VisorIzq = 0;
-int PisoDer = 0; 
+int ValorIzq = 0;
+int ValorCen = 0;
+int ValorDer = 0;
+int PisoDer = 0;
 int PisoIzq = 0;
-
 void loop() {
-  byte lectura_sensores = 0;
-  int pisoIzq  = (borde(PISO_IZQ)<960); // 1 si hay blanco
-  int pisoDer  = (borde(PISO_DER)<960);
-  int ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ)<30);
-  int ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN)<30);
-  int ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER)<30);
 
-  lectura_sensores = (ultraIzq << 4) | (ultraCen << 3) |
-                     (ultraDer << 2) | (pisoIzq << 1) | (pisoDer << 0);
-codigo(lectura_sensores);
-Serial.print("Sensores: Izq: ");
-Serial.print(ultraIzq);
-Serial.print("  Cen ");
-Serial.print(ultraCen);
-Serial.print("  Der  ");
-Serial.print(ultraDer);
-Serial.print("  Pisos: Izq: ");
-Serial.print(pisoIzq);
-Serial.print("  Der: ");
-Serial.print(pisoDer);
-Serial.print(" Byte: ");
-Serial.println(lectura_sensores, BIN);
+ 
 
+PisoIzq = sensorPiso(PISO_DER);
+Serial.println(PisoIzq);
 }
 
 
@@ -184,9 +158,16 @@ long leerUltrasonico(int triggerPin, int echoPin) {
 /////
 
 ////sensor piso
-int borde(int pin) {
+bool borde(int pin) {
   int lectura = analogRead(pin);
-  return lectura ; // devuelve true si detecta blanco (borde)
+  return (lectura > 600); // devuelve true si detecta blanco (borde)
+}
+
+int sensorPiso (int pin){
+
+return analogRead(pin);
+
+  
 }
 ////
 
@@ -297,164 +278,135 @@ void ISR_Timer() {
 void codigo (byte sensores) {
   switch (sensores) {
 
-    case 0b00000: // BUSCAR
-      avanzar(255,255);
-      Serial.println("Avanzar 1");
+    case 0b00000: // 0
+      // Acción para 00000
       break;
 
-    case 0b00001: // PISO DERECHA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 1");
+    case 0b00001: // 1
+      // Acción para 00001
       break;
 
-    case 0b00010: // PISO IZQUIERDA
-      girarDer(255,255);
-      Serial.println("Girar Derecha 1");
+    case 0b00010: // 2
+      // Acción para 00010
       break;
 
-    case 0b00011: // DOBLE PISO
-      retroceder(255,255);
-      Serial.println("Retroceder 1");
+    case 0b00011: // 3
+      // Acción para 00011
       break;
 
-    case 0b00100: // VISION DERECHA
-      girarDer(255,255);
-      Serial.println("Girar Derecha 2");
+    case 0b00100: // 4
+      // Acción para 00100
       break;
 
-    case 0b00101: // VISION DERECHA Y SENSOR DERECHA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 2");
+    case 0b00101: // 5
+      // Acción para 00101
       break;
 
-    case 0b00110: // VISION DERECHA Y SENSOR IZQUIERDA
-      girarDer(255,255);
-      Serial.println("Girar Derecha 3");
+    case 0b00110: // 6
+      // Acción para 00110
       break;
 
-    case 0b00111: // VISION DERECHA Y AMBOS SENSORES
-      retroceder(255,255);
-      Serial.println("Retroceder 2");
+    case 0b00111: // 7
+      // Acción para 00111
       break;
 
-    case 0b01000: // SENSOR CENTRO
-      avanzar(255,255);
-      Serial.println("Avanzar 2");
+    case 0b01000: // 8
+      // Acción para 01000
       break;
 
-    case 0b01001: // SENSOR CENTRO Y PISO DERECHA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 3");
+    case 0b01001: // 9
+      // Acción para 01001
       break;
 
-    case 0b01010: // SENSOR CENTRO Y PISO IZQUIERDA
-      girarDer(255,255);
-      Serial.println("Girar Derecha 4");
+    case 0b01010: // 10
+      // Acción para 01010
       break;
 
-    case 0b01011: // SENSOR CENTRO Y AMBOS PISOS
-      retroceder(255,255);
-      Serial.println("Retroceder 3");
+    case 0b01011: // 11
+      // Acción para 01011
       break;
 
-    case 0b01100: // SENSOR CENTRO Y SENSOR DERECHA
-      avanzar(255,255);
-      Serial.println("Avanzar 3");
+    case 0b01100: // 12
+      // Acción para 01100
       break;
 
-    case 0b01101: // SENSOR CENTRO Y SENSOR DERECHA PISO DER
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 4");
+    case 0b01101: // 13
+      // Acción para 01101
       break;
 
-    case 0b01110: // SENSOR CENTRAL SENSOR DERECHA Y PISO IZQ
-      girarDer(255,255);
-      Serial.println("Girar Derecha 5");
+    case 0b01110: // 14
+      // Acción para 01110
       break;
 
-    case 0b01111: // SENSOR CENTRAL SENSOR DERECHA AMBOS PISOS
-      retroceder(255,255);
-      Serial.println("Retroceder 4");
+    case 0b01111: // 15
+      // Acción para 01111
       break;
 
-    case 0b10000: // SENSOR IZQUIERDA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 5");
+    case 0b10000: // 16
+      // Acción para 10000
       break;
 
-    case 0b10001: // SENSOR IZQUIERDA PISO DERECHA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 6");
+    case 0b10001: // 17
+      // Acción para 10001
       break;
 
-    case 0b10010: // SENSOR IZQUIERDA PISO IZQUIERDA
-      girarDer(255,255);
-      Serial.println("Girar Derecha 6");
+    case 0b10010: // 18
+      // Acción para 10010
       break;
 
-    case 0b10011: // SENSOR IZQUIERDA AMBOS PISOS
-      retroceder(255,255);
-      Serial.println("Retroceder 5");
+    case 0b10011: // 19
+      // Acción para 10011
       break;
 
-    case 0b10100: // SENSOR IZQUIERDA SENSOR DERECHA
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 7");
+    case 0b10100: // 20
+      // Acción para 10100
       break;
 
-    case 0b10101: // SENSOR IZQUIERDA SENSOR DERECHA PISO DER
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 8");
+    case 0b10101: // 21
+      // Acción para 10101
       break;
 
     case 0b10110: // 22
-      girarDer(255,255);
-      Serial.println("Girar Derecha 7");
+      // Acción para 10110
       break;
 
     case 0b10111: // 23
-      retroceder(255,255);
-      Serial.println("Retroceder 6");
+      // Acción para 10111
       break;
 
     case 0b11000: // 24
-      avanzar(255,255);
-      Serial.println("Avanzar 4");
+      // Acción para 11000
       break;
 
     case 0b11001: // 25
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 9");
+      // Acción para 11001
       break;
 
     case 0b11010: // 26
-      girarDer(255,255);
-      Serial.println("Girar Derecha 8");
+      // Acción para 11010
       break;
 
     case 0b11011: // 27
-      retroceder(255,255);
-      Serial.println("Retroceder 7");
+      // Acción para 11011
       break;
 
     case 0b11100: // 28
-      avanzar(255,255);
-      Serial.println("Avanzar 5");
+      // Acción para 11100
       break;
 
     case 0b11101: // 29
-      girarIzq(255,255);
-      Serial.println("Girar Izquierda 10");
+      // Acción para 11101
       break;
 
     case 0b11110: // 30
-      girarDer(255,255);
-      Serial.println("Girar Derecha 9");
+      // Acción para 11110
       break;
 
     case 0b11111: // 31
-      retroceder(255,255);
-      Serial.println("Retroceder 8");
+      // Acción para 11111
       break;
+
+
+
   }
 }

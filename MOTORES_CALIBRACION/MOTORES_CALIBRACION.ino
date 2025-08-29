@@ -1,4 +1,4 @@
-#include <TimerOne.h>
+//#include <TimerOne.h>
 
 
 
@@ -26,10 +26,10 @@
 
 
 ////Motores
-#define MOTOR_IZQ_A 4
-#define MOTOR_IZQ_B 7
-#define MOTOR_DER_A 8
-#define MOTOR_DER_B 16
+#define MOTOR_IZQ_A 8
+#define MOTOR_IZQ_B 9
+#define MOTOR_DER_A 7
+#define MOTOR_DER_B 4
 
 #define ENABLE_IZQ 5
 #define ENABLE_DER 6
@@ -80,7 +80,7 @@ void girarIzq(int velocidadIzq, int velocidadDer);
 void girarDer(int velocidadIzq, int velocidadDer);
 void detener();
 bool antiRebote(int pin, int &estadoMaquina, int &msBoton);
-void ISR_Timer();
+//void ISR_Timer();
 
 
 
@@ -104,7 +104,7 @@ void setup() {
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   pinMode(LED3, OUTPUT);
-  pinMode(LED4, OUTPUT);
+  pinMode(13, OUTPUT);
   ///
   pinMode(BOTON1, INPUT_PULLUP);
   pinMode(BOTON2, INPUT_PULLUP);
@@ -116,8 +116,8 @@ void setup() {
   pinMode(ENABLE_DER, OUTPUT);
   pinMode(ENABLE_IZQ, OUTPUT);
   ///
-  Timer1.attachInterrupt(ISR_Timer);
-  Timer1.initialize(1000);  // 1 ms
+  //Timer1.attachInterrupt(ISR_Timer);
+  //Timer1.initialize(1000);  // 1 ms
   ///
 
   Serial.begin(9600);
@@ -134,31 +134,9 @@ int PisoDer = 0;
 int PisoIzq = 0;
 
 void loop() {
-  byte lectura_sensores = 0;
-  int pisoIzq  = (borde(PISO_IZQ)<960); // 1 si hay blanco
-  int pisoDer  = (borde(PISO_DER)<960);
-  int ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ)<30);
-  int ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN)<30);
-  int ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER)<30);
-
-  lectura_sensores = (ultraIzq << 4) | (ultraCen << 3) |
-                     (ultraDer << 2) | (pisoIzq << 1) | (pisoDer << 0);
-codigo(lectura_sensores);
-Serial.print("Sensores: Izq: ");
-Serial.print(ultraIzq);
-Serial.print("  Cen ");
-Serial.print(ultraCen);
-Serial.print("  Der  ");
-Serial.print(ultraDer);
-Serial.print("  Pisos: Izq: ");
-Serial.print(pisoIzq);
-Serial.print("  Der: ");
-Serial.print(pisoDer);
-Serial.print(" Byte: ");
-Serial.println(lectura_sensores, BIN);
+  digitalWrite(13, HIGH);
 
 }
-
 
 ////Sensor ultrasonico
 long leerUltrasonico(int triggerPin, int echoPin) {
@@ -280,16 +258,16 @@ bool antiRebote(int pin, int &estadoMaquina, int &msBoton) {
 //
 
 ///timer
-void ISR_Timer() {
-  msBoton1++;
-  msBoton2++;
-  msBotonEspera++;
+//void ISR_Timer() {
+  //msBoton1++;
+  //msBoton2++;
+  //msBotonEspera++;
 
-  if (esperandoEjecucion) {
-    tiempoDesdePresionado++;
-  }
+  //if (esperandoEjecucion) {
+    //tiempoDesdePresionado++;
+  //}
 
-}
+//}
 ////
 
 
