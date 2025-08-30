@@ -3,10 +3,10 @@
 
 
 /////Ultrasonico
-#define TRIG_IZQ A1
-#define ECHO_IZQ A0
-#define TRIG_CEN A3
-#define ECHO_CEN A2
+#define TRIG_IZQ A3
+#define ECHO_IZQ A2
+#define TRIG_CEN A1
+#define ECHO_CEN A0
 #define TRIG_DER A4
 #define ECHO_DER A5
 ////
@@ -29,7 +29,7 @@
 #define MOTOR_IZQ_A 4
 #define MOTOR_IZQ_B 7
 #define MOTOR_DER_A 8
-#define MOTOR_DER_B 16
+#define MOTOR_DER_B 9
 
 #define ENABLE_IZQ 5
 #define ENABLE_DER 6
@@ -134,26 +134,31 @@ int PisoDer = 0;
 int PisoIzq = 0;
 
 void loop() {
+  
   byte lectura_sensores = 0;
-  int pisoIzq  = (borde(PISO_IZQ)<960); // 1 si hay blanco
-  int pisoDer  = (borde(PISO_DER)<960);
-  int ultraIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ)<30);
-  int ultraCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN)<30);
-  int ultraDer   = (leerUltrasonico(TRIG_DER, ECHO_DER)<30);
-
-  lectura_sensores = (ultraIzq << 5) | (ultraCen << 4) |
-                     (ultraDer << 3) | (pisoIzq << 2) | (pisoDer << 1);
+  if(millis()-millisVD >= 60){
+  int PisoIzq  = (borde(PISO_IZQ)<960); // 1 si hay blanco
+  int PisoDer  = (borde(PISO_DER)<960);
+  int VisorIzq   = (leerUltrasonico(TRIG_IZQ, ECHO_IZQ)<30);
+  int VisorCen = (leerUltrasonico(TRIG_CEN, ECHO_CEN)<30);
+  int VisorDer   = (leerUltrasonico(TRIG_DER, ECHO_DER)<30);
+  millisVD = millis();
+  Serial.println("Leido");
+  }
+  
+  lectura_sensores = (VisorIzq << 4) | (VisorCen << 3) |
+                     (VisorDer << 2) | (PisoIzq << 1) | (PisoDer << 0);
 //codigo(lectura_sensores);
 Serial.print("Sensores: Izq: ");
-Serial.print(ultraIzq);
+Serial.print(VisorIzq);
 Serial.print("  Cen ");
-Serial.print(ultraCen);
+Serial.print(VisorCen);
 Serial.print("  Der  ");
-Serial.print(ultraDer);
+Serial.print(VisorDer);
 Serial.print("  Pisos: Izq: ");
-Serial.print(pisoIzq);
+Serial.print(PisoIzq);
 Serial.print("  Der: ");
-Serial.print(pisoDer);
+Serial.print(PisoDer);
 Serial.println(" Byte: ");
 
 
