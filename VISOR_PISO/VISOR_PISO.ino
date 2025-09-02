@@ -3,10 +3,11 @@
 
 
 /////Ultrasonico
-#define TRIG_IZQ A1
-#define ECHO_IZQ A0
-#define TRIG_CEN A3
-#define ECHO_CEN A2
+
+#define ECHO_CEN A0
+#define TRIG_CEN A1
+#define ECHO_IZQ A2
+#define TRIG_IZQ A3
 #define TRIG_DER A4
 #define ECHO_DER A5
 ////
@@ -28,8 +29,8 @@
 ////Motores
 #define MOTOR_IZQ_A 4
 #define MOTOR_IZQ_B 7
-#define MOTOR_DER_A 8
-#define MOTOR_DER_B 16
+#define MOTOR_DER_A 9
+#define MOTOR_DER_B 8
 
 #define ENABLE_IZQ 5
 #define ENABLE_DER 6
@@ -149,13 +150,22 @@ if (millis() - millisVI >= 60){
   millisVI = millis();
 }
 
-if(VisorIzq < 30 ){
+
+
+
+
+
+if((PisoDer&&PisoIzq)>=960){
+  digitalWrite(LED1,LOW);
+  digitalWrite(LED2,LOW);
+  if(VisorCen < 30 ){
   avanzar(255,255);
   digitalWrite(LED4,HIGH);
 }
-if(VisorIzq > 30 ){
-  retroceder(255,255);
+if(VisorCen > 30 ){
   digitalWrite(LED4,LOW);
+  detener();
+}
 }
 Serial.print("Sensores: Izq: ");
 Serial.print(VisorIzq);
@@ -251,7 +261,8 @@ void detener() {
   digitalWrite(MOTOR_IZQ_B, LOW);
   digitalWrite(MOTOR_DER_A, LOW);
   digitalWrite(MOTOR_DER_B, LOW);
-
+  analogWrite(ENABLE_IZQ, 0);  
+  analogWrite(ENABLE_DER, 0);
 }
 ////
 
